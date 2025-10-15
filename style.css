@@ -1,84 +1,235 @@
 * {
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  background: #0f172a;
-  color: #fff;
-  font-family: "Poppins", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
 }
 
-.calculator {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  width: 300px;
+.game-container {
+    width: 90%;
+    max-width: 500px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
-#display {
-  width: 100%;
-  height: 60px;
-  border: none;
-  border-radius: 8px;
-  text-align: right;
-  padding: 10px;
-  font-size: 1.8rem;
-  margin-bottom: 15px;
-  background: #0f172a;
-  color: #f1f5f9;
+.header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    padding: 20px;
+    color: white;
+    text-align: center;
 }
 
-.buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+.header h1 {
+    font-size: 2em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.btn {
-  background: #334155;
-  border: none;
-  color: #f1f5f9;
-  font-size: 1.2rem;
-  padding: 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
+.stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
 }
 
-.btn:hover {
-  background: #475569;
+.stat {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 15px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
 }
 
-.operator {
-  background: #0284c7;
+.label {
+    font-size: 0.9em;
+    opacity: 0.9;
 }
 
-.operator:hover {
-  background: #0369a1;
+.value {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-left: 5px;
 }
 
-.equal {
-  background: #16a34a;
-  grid-row: span 2;
+#game-area {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background: #2d3436;
+    overflow: hidden;
 }
 
-.equal:hover {
-  background: #15803d;
+.road {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #636e72 0%, #2d3436 50%, #636e72 100%);
 }
 
-.zero {
-  grid-column: span 2;
+.lane-marker {
+    position: absolute;
+    width: 8px;
+    height: 40px;
+    background: white;
+    border-radius: 4px;
+    animation: moveDown 0.5s linear infinite;
 }
 
-#history {
-  text-align: right;
-  margin-top: 10px;
-  font-size: 1rem;
-  color: #94a3b8;
+.lane-marker:nth-child(1) {
+    left: 33%;
+}
+
+.lane-marker:nth-child(2) {
+    left: 50%;
+    animation-delay: 0.25s;
+}
+
+.lane-marker:nth-child(3) {
+    left: 66%;
+    animation-delay: 0.5s;
+}
+
+@keyframes moveDown {
+    0% {
+        top: -40px;
+    }
+    100% {
+        top: 100%;
+    }
+}
+
+.car {
+    position: absolute;
+    font-size: 3em;
+    transition: left 0.15s ease;
+    z-index: 10;
+}
+
+.player {
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.enemy {
+    top: -60px;
+    animation: enemyMove 3s linear;
+}
+
+.coin {
+    position: absolute;
+    font-size: 2em;
+    top: -60px;
+    animation: enemyMove 3s linear;
+    z-index: 5;
+}
+
+@keyframes enemyMove {
+    0% {
+        top: -60px;
+    }
+    100% {
+        top: 100%;
+    }
+}
+
+.game-over, .start-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    width: 80%;
+    max-width: 400px;
+}
+
+.game-over h2, .start-screen h2 {
+    color: #f5576c;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.game-over p, .start-screen p {
+    font-size: 1.2em;
+    margin: 15px 0;
+    color: #2d3436;
+}
+
+button {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2em;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(245, 87, 108, 0.6);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.hidden {
+    display: none;
+}
+
+.controls {
+    background: #2d3436;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.explosion {
+    animation: explode 0.5s ease-out;
+}
+
+@keyframes explode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.hit {
+    animation: hit 0.3s ease;
+}
+
+@keyframes hit {
+    0%, 100% {
+        transform: translateX(-50%);
+    }
+    25% {
+        transform: translateX(-40%);
+    }
+    75% {
+        transform: translateX(-60%);
+    }
 }
