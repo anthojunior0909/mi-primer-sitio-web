@@ -1,74 +1,92 @@
-// Ajedrez básico corregido
-const color = (cell === cell.toUpperCase()) ? 'w' : 'b';
-const type = cell.toUpperCase();
-const moves = [];
+document.addEventListener('DOMContentLoaded', () => {
+    const boardElement = document.getElementById('chessboard');
+    const playerTurnElement = document.getElementById('player-turn');
+    const whiteCapturedElement = document.getElementById('white-captured');
+    const blackCapturedElement = document.getElementById('black-captured');
+
+    let board = [];
+    let selectedPiece = null;
+    let selectedSquare = null;
+    const game = new Chess();
+
+    function createBoard() {
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const square = document.createElement('div');
+                square.classList.add('square');
+                square.classList.add((i + j) % 2 === 0 ? 'white' : 'black');
+                square.dataset.row = i;
+                square.dataset.col = j;
+                boardElement.appendChild(square);
+                board.push(square);
+            }
+        }
+    }
+
+    function getPieceUnicode(piece) {
+        const pieces = {
+            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+        };
+        return pieces[piece.type] || '';
+    }
+
+    function renderBoard() {
+        const boardState = game.board();
+        board.forEach((square, index) => {
+            const row = Math.floor(index / 8);
+            const col = index % 8;
+            const piece = boardState[row][col];
+            if (piece) {
+                const pieceElement = document.createElement('span');
+                pieceElement.classList.add('piece');
+                pieceElement.style.color = piece.color === 'w' ? '#fff' : '#000';
+                pieceElement.innerHTML = getPieceUnicode(piece);
+                square.innerHTML = '';
+                square.appendChild(pieceElement);
+            } else {
+                square.innerHTML = '';
+            }
+        });
+        playerTurnElement.textContent = game.turn() === 'w' ? 'Blancas' : 'Negras';
+    }
+
+    function handleSquareClick(event) {
+        const square = event.currentTarget;
+        const row = parseInt(square.dataset.row);
+        const col = parseInt(square.dataset.col);
+        const algebraic = String.fromCharCode('a'.charCodeAt(0) + col) + (8 - row);
+        const piece = game.get(algebraic);
+
+        if (selectedPiece) {
+            const move = {
+                from: selectedSquare,
+                to: algebraic,
+                promotion: 'q' // Promociona a reina por defecto
+            };
+            const result = game.move(move);
+            if (result) {
+                renderBoard();
+                updateCapturedPieces();
+            }
+            selectedPiece = null;
+            selectedSquare = null;
+            board.forEach(s => s.style.backgroundColor = ''); // Limpia el resaltado
+        } else if (piece && piece.color === game.turn()) {
+            selectedPiece = piece;
+            selectedSquare = algebraic;
+            square.style.backgroundColor = 'yellow'; // Resalta la casilla seleccionada
+        }
+    }
+    
+    function updateCapturedPieces() {
+        // Esta es una implementación simple, se podría mejorar para mostrar las piezas exactas.
+        // Por ahora, solo es un marcador de posición.
+    }
 
 
-const addIfEmptyOrCapture = (rr,cc) => {
-if(!inBounds(rr,cc)) return;
-const t = board[rr][cc];
-if(!t) moves.push({r:rr,c:cc});
-else if((t === t.toUpperCase()) !== (cell === cell.toUpperCase())) moves.push({r:rr,c:cc});
-};
+    board.forEach(square => square.addEventListener('click', handleSquareClick));
 
-
-if(type === 'P'){
-const dir = (color === 'w') ? -1 : 1;
-// un paso
-if(inBounds(r+dir,c) && !board[r+dir][c]) moves.push({r:r+dir,c});
-// dos pasos desde fila inicial
-const startRow = (color==='w') ? 6 : 1;
-if(r===startRow && !board[r+dir][c] && !board[r+2*dir][c]) moves.push({r:r+2*dir,c});
-// capturas
-[[r+dir,c-1],[r+dir,c+1]].forEach(([rr,cc])=>{
-if(inBounds(rr,cc) && board[rr][cc] && ((board[rr][cc]===board[rr][cc].toUpperCase()) !== (cell===cell.toUpperCase()))) moves.push({r:rr,c:cc});
+    createBoard();
+    renderBoard();
 });
-return moves;
-
-
-if(type === 'N'){
-const deltas = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-deltas.forEach(([dr,dc])=> addIfEmptyOrCapture(r+dr,c+dc));
-return moves;
-}
-
-
-if(type === 'B' || type === 'Q'){
-[[-1,-1],[-1,1],[1,-1],[1,1]].forEach(dir=> slide(r,c,dir[0],dir[1],cell,moves));
-}
-if(type === 'R' || type === 'Q'){
-[[-1,0],[1,0],[0,-1],[0,1]].forEach(dir=> slide(r,c,dir[0],dir[1],cell,moves));
-}
-
-
-if(type === 'K'){
-for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-if(dr===0 && dc===0) continue;
-addIfEmptyOrCapture(r+dr,c+dc);
-}
-return moves;
-}
-
-
-return moves;
-}
-
-
-function slide(r,c,dr,dc,cell,moves){
-let rr = r+dr, cc = c+dc;
-while(inBounds(rr,cc)){
-if(!board[rr][cc]){ moves.push({r:rr,c:cc}); }
-else{ if((board[rr][cc]===board[rr][cc].toUpperCase()) !== (cell===cell.toUpperCase())) moves.push({r:rr,c:cc}); break; }
-rr += dr; cc += dc;
-}
-}
-
-
-function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
-
-
-resetBtn.addEventListener('click', ()=>{ init(); });
-
-
-// inicar
-init();

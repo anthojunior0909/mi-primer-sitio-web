@@ -1,23 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ajedrez</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajedrez</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
-<h1>Ajedrez</h1>
-<div class="controls">
-<div id="turn">Turno: <span id="turnPlayer">Blancas</span></div>
-<button id="resetBtn">Reiniciar</button>
-</div>
-<div id="board" class="board" aria-label="Tablero de ajedrez"></div>
-<div class="legend">
-<p>Haz clic en una pieza para ver movimientos posibles. Clic en casilla para mover.</p>
-</div>
-</div>
-<script src="script.js"></script>
+    <div id="game-container">
+        <div id="chessboard"></div>
+        <div id="game-info">
+            <h2>Turno de: <span id="player-turn">Blancas</span></h2>
+            <div id="captured-pieces">
+                <h3>Piezas Capturadas:</h3>
+                <div id="white-captured"></div>
+                <div id="black-captured"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
