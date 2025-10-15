@@ -13,7 +13,7 @@ h1{margin:0 0 12px}
 .square{display:flex;align-items:center;justify-content:center;font-size:clamp(18px,4vmin,36px);user-select:none;cursor:pointer}
 .square.light{background:var(--light)}
 .square.dark{background:var(--dark)}
-.square.highlight{outline:3px solid rgba(74,144,226,0.7);outline-offset:-3px}
+.square.highlight{outline:4px solid rgba(74,144,226,0.85);outline-offset:-4px}
 .square.last-move{box-shadow:inset 0 0 0 4px rgba(74,144,226,0.12)}
 .piece{pointer-events:none}
 .turn{font-weight:600}
