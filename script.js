@@ -1,225 +1,501 @@
-// Variables del juego
-let score = 0;
-let lives = 3;
-let gameSpeed = 1;
-let gameRunning = false;
-let isPaused = false;
-let playerPosition = 50;
-let enemies = [];
-let coins = [];
-let gameInterval;
-let spawnInterval;
-
-// Elementos del DOM
-const gameArea = document.getElementById('game-area');
-const playerCar = document.getElementById('player-car');
-const scoreElement = document.getElementById('score');
-const speedElement = document.getElementById('speed');
-const livesElement = document.getElementById('lives');
-const gameOverScreen = document.getElementById('game-over');
-const startScreen = document.getElementById('start-screen');
-const finalScoreElement = document.getElementById('final-score');
-const startBtn = document.getElementById('start-btn');
-const restartBtn = document.getElementById('restart-btn');
-
-// Emojis para enemigos
-const enemyCars = ['🚕', '🚙', '🚌', '🚐', '🚓'];
-const coinEmoji = '🪙';
-
-// Inicializar juego
-function initGame() {
-    score = 0;
-    lives = 3;
-    gameSpeed = 1;
-    playerPosition = 50;
-    enemies = [];
-    coins = [];
-    gameRunning = true;
-    isPaused = false;
-    
-    updateUI();
-    startScreen.classList.add('hidden');
-    gameOverScreen.classList.add('hidden');
-    
-    // Limpiar enemigos y monedas anteriores
-    document.querySelectorAll('.enemy, .coin').forEach(el => el.remove());
-    
-    // Iniciar loops del juego
-    gameInterval = setInterval(gameLoop, 20);
-    spawnInterval = setInterval(spawnObjects, 1500);
-}
-
-// Loop principal del juego
-function gameLoop() {
-    if (!gameRunning || isPaused) return;
-    
-    // Mover enemigos y monedas
-    enemies.forEach((enemy, index) => {
-        enemy.position += gameSpeed * 2;
-        enemy.element.style.top = enemy.position + 'px';
-        
-        // Verificar colisión
-        if (checkCollision(enemy)) {
-            hitPlayer();
-            removeObject(enemy, enemies, index);
-        }
-        
-        // Remover si sale de la pantalla
-        if (enemy.position > gameArea.offsetHeight) {
-            score += 10;
-            removeObject(enemy, enemies, index);
-            updateUI();
-        }
-    });
-    
-    coins.forEach((coin, index) => {
-        coin.position += gameSpeed * 2;
-        coin.element.style.top = coin.position + 'px';
-        
-        // Verificar recolección
-        if (checkCollision(coin)) {
-            score += 50;
-            coin.element.classList.add('explosion');
-            setTimeout(() => removeObject(coin, coins, index), 100);
-            updateUI();
-        }
-        
-        // Remover si sale de la pantalla
-        if (coin.position > gameArea.offsetHeight) {
-            removeObject(coin, coins, index);
-        }
-    });
-    
-    // Aumentar velocidad gradualmente
-    if (score > 0 && score % 200 === 0) {
-        gameSpeed += 0.1;
-        speedElement.textContent = Math.floor(gameSpeed);
+// Piezas de ajedrez
+const pieces = {
+    white: {
+        king: '♔',
+        queen: '♕',
+        rook: '♖',
+        bishop: '♗',
+        knight: '♘',
+        pawn: '♙'
+    },
+    black: {
+        king: '♚',
+        queen: '♛',
+        rook: '♜',
+        bishop: '♝',
+        knight: '♞',
+        pawn: '♟'
     }
+};
+
+// Estado del juego
+let board = [];
+let currentPlayer = 'white';
+let selectedSquare = null;
+let validMoves = [];
+let capturedWhite = [];
+let capturedBlack = [];
+let whiteKingPos = { row: 7, col: 4 };
+let blackKingPos = { row: 0, col: 4 };
+
+// Elementos DOM
+const chessBoard = document.getElementById('chess-board');
+const currentPlayerEl = document.getElementById('current-player');
+const statusMessage = document.getElementById('status-message');
+const capturedWhiteEl = document.getElementById('captured-white');
+const capturedBlackEl = document.getElementById('captured-black');
+const gameOverModal = document.getElementById('game-over-modal');
+const winnerText = document.getElementById('winner-text');
+const winnerMessage = document.getElementById('winner-message');
+
+// Inicializar tablero
+function initBoard() {
+    board = [
+        [
+            { type: 'rook', color: 'black' },
+            { type: 'knight', color: 'black' },
+            { type: 'bishop', color: 'black' },
+            { type: 'queen', color: 'black' },
+            { type: 'king', color: 'black' },
+            { type: 'bishop', color: 'black' },
+            { type: 'knight', color: 'black' },
+            { type: 'rook', color: 'black' }
+        ],
+        Array(8).fill(null).map(() => ({ type: 'pawn', color: 'black' })),
+        Array(8).fill(null),
+        Array(8).fill(null),
+        Array(8).fill(null),
+        Array(8).fill(null),
+        Array(8).fill(null).map(() => ({ type: 'pawn', color: 'white' })),
+        [
+            { type: 'rook', color: 'white' },
+            { type: 'knight', color: 'white' },
+            { type: 'bishop', color: 'white' },
+            { type: 'queen', color: 'white' },
+            { type: 'king', color: 'white' },
+            { type: 'bishop', color: 'white' },
+            { type: 'knight', color: 'white' },
+            { type: 'rook', color: 'white' }
+        ]
+    ];
+    
+    currentPlayer = 'white';
+    selectedSquare = null;
+    validMoves = [];
+    capturedWhite = [];
+    capturedBlack = [];
+    whiteKingPos = { row: 7, col: 4 };
+    blackKingPos = { row: 0, col: 4 };
+    
+    renderBoard();
+    updateStatus();
 }
 
-// Generar objetos (enemigos y monedas)
-function spawnObjects() {
-    if (!gameRunning || isPaused) return;
+// Renderizar tablero
+function renderBoard() {
+    chessBoard.innerHTML = '';
     
-    // 70% enemigos, 30% monedas
-    const isEnemy = Math.random() > 0.3;
-    const lanes = [20, 40, 60, 80];
-    const lane = lanes[Math.floor(Math.random() * lanes.length)];
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const square = document.createElement('div');
+            square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+            square.dataset.row = row;
+            square.dataset.col = col;
+            
+            const piece = board[row][col];
+            if (piece) {
+                const pieceEl = document.createElement('span');
+                pieceEl.className = 'piece';
+                pieceEl.textContent = pieces[piece.color][piece.type];
+                square.appendChild(pieceEl);
+                square.classList.add('has-piece');
+            }
+            
+            square.addEventListener('click', () => handleSquareClick(row, col));
+            chessBoard.appendChild(square);
+        }
+    }
     
-    if (isEnemy) {
-        spawnEnemy(lane);
+    updateCapturedPieces();
+}
+
+// Manejar clic en casilla
+function handleSquareClick(row, col) {
+    const square = board[row][col];
+    
+    // Si hay una pieza seleccionada
+    if (selectedSquare) {
+        // Verificar si es un movimiento válido
+        if (validMoves.some(move => move.row === row && move.col === col)) {
+            movePiece(selectedSquare.row, selectedSquare.col, row, col);
+            clearSelection();
+            switchPlayer();
+        } else if (square && square.color === currentPlayer) {
+            // Seleccionar otra pieza del mismo color
+            selectSquare(row, col);
+        } else {
+            clearSelection();
+        }
     } else {
-        spawnCoin(lane);
+        // Seleccionar pieza si es del jugador actual
+        if (square && square.color === currentPlayer) {
+            selectSquare(row, col);
+        }
     }
 }
 
-// Crear enemigo
-function spawnEnemy(lane) {
-    const enemy = document.createElement('div');
-    enemy.className = 'car enemy';
-    enemy.textContent = enemyCars[Math.floor(Math.random() * enemyCars.length)];
-    enemy.style.left = lane + '%';
-    gameArea.appendChild(enemy);
-    
-    enemies.push({
-        element: enemy,
-        position: -60,
-        lane: lane
+// Seleccionar casilla
+function selectSquare(row, col) {
+    selectedSquare = { row, col };
+    validMoves = getValidMoves(row, col);
+    highlightSquares();
+}
+
+// Limpiar selección
+function clearSelection() {
+    selectedSquare = null;
+    validMoves = [];
+    highlightSquares();
+}
+
+// Resaltar casillas
+function highlightSquares() {
+    const squares = document.querySelectorAll('.square');
+    squares.forEach(sq => {
+        sq.classList.remove('selected', 'valid-move', 'check');
     });
-}
-
-// Crear moneda
-function spawnCoin(lane) {
-    const coin = document.createElement('div');
-    coin.className = 'coin';
-    coin.textContent = coinEmoji;
-    coin.style.left = lane + '%';
-    gameArea.appendChild(coin);
     
-    coins.push({
-        element: coin,
-        position: -60,
-        lane: lane
+    if (selectedSquare) {
+        const index = selectedSquare.row * 8 + selectedSquare.col;
+        squares[index].classList.add('selected');
+    }
+    
+    validMoves.forEach(move => {
+        const index = move.row * 8 + move.col;
+        squares[index].classList.add('valid-move');
     });
-}
-
-// Verificar colisión
-function checkCollision(obj) {
-    const playerRect = playerCar.getBoundingClientRect();
-    const objRect = obj.element.getBoundingClientRect();
     
-    return !(playerRect.right < objRect.left || 
-             playerRect.left > objRect.right || 
-             playerRect.bottom < objRect.top || 
-             playerRect.top > objRect.bottom);
+    // Resaltar rey en jaque
+    if (isKingInCheck(currentPlayer)) {
+        const kingPos = currentPlayer === 'white' ? whiteKingPos : blackKingPos;
+        const index = kingPos.row * 8 + kingPos.col;
+        squares[index].classList.add('check');
+    }
 }
 
-// Jugador es golpeado
-function hitPlayer() {
-    lives--;
-    playerCar.classList.add('hit');
-    setTimeout(() => playerCar.classList.remove('hit'), 300);
+// Obtener movimientos válidos
+function getValidMoves(row, col) {
+    const piece = board[row][col];
+    if (!piece) return [];
     
-    if (lives <= 0) {
-        endGame();
+    let moves = [];
+    
+    switch (piece.type) {
+        case 'pawn':
+            moves = getPawnMoves(row, col, piece.color);
+            break;
+        case 'rook':
+            moves = getRookMoves(row, col, piece.color);
+            break;
+        case 'knight':
+            moves = getKnightMoves(row, col, piece.color);
+            break;
+        case 'bishop':
+            moves = getBishopMoves(row, col, piece.color);
+            break;
+        case 'queen':
+            moves = getQueenMoves(row, col, piece.color);
+            break;
+        case 'king':
+            moves = getKingMoves(row, col, piece.color);
+            break;
     }
-    updateUI();
+    
+    return moves.filter(move => !wouldBeInCheck(row, col, move.row, move.col, piece.color));
 }
 
-// Remover objeto
-function removeObject(obj, array, index) {
-    if (obj.element && obj.element.parentNode) {
-        obj.element.remove();
+// Movimientos del peón
+function getPawnMoves(row, col, color) {
+    const moves = [];
+    const direction = color === 'white' ? -1 : 1;
+    const startRow = color === 'white' ? 6 : 1;
+    
+    // Mover adelante
+    if (!board[row + direction]?.[col]) {
+        moves.push({ row: row + direction, col });
+        
+        // Doble movimiento inicial
+        if (row === startRow && !board[row + 2 * direction]?.[col]) {
+            moves.push({ row: row + 2 * direction, col });
+        }
     }
-    array.splice(index, 1);
+    
+    // Capturar diagonal
+    [-1, 1].forEach(dc => {
+        const newCol = col + dc;
+        if (board[row + direction]?.[newCol]?.color === (color === 'white' ? 'black' : 'white')) {
+            moves.push({ row: row + direction, col: newCol });
+        }
+    });
+    
+    return moves;
 }
 
-// Actualizar interfaz
-function updateUI() {
-    scoreElement.textContent = score;
-    speedElement.textContent = Math.floor(gameSpeed);
-    livesElement.textContent = '❤️'.repeat(lives);
+// Movimientos de la torre
+function getRookMoves(row, col, color) {
+    const moves = [];
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    
+    directions.forEach(([dr, dc]) => {
+        let r = row + dr;
+        let c = col + dc;
+        
+        while (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            if (!board[r][c]) {
+                moves.push({ row: r, col: c });
+            } else {
+                if (board[r][c].color !== color) {
+                    moves.push({ row: r, col: c });
+                }
+                break;
+            }
+            r += dr;
+            c += dc;
+        }
+    });
+    
+    return moves;
+}
+
+// Movimientos del caballo
+function getKnightMoves(row, col, color) {
+    const moves = [];
+    const offsets = [
+        [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+        [1, -2], [1, 2], [2, -1], [2, 1]
+    ];
+    
+    offsets.forEach(([dr, dc]) => {
+        const r = row + dr;
+        const c = col + dc;
+        
+        if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            if (!board[r][c] || board[r][c].color !== color) {
+                moves.push({ row: r, col: c });
+            }
+        }
+    });
+    
+    return moves;
+}
+
+// Movimientos del alfil
+function getBishopMoves(row, col, color) {
+    const moves = [];
+    const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+    
+    directions.forEach(([dr, dc]) => {
+        let r = row + dr;
+        let c = col + dc;
+        
+        while (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            if (!board[r][c]) {
+                moves.push({ row: r, col: c });
+            } else {
+                if (board[r][c].color !== color) {
+                    moves.push({ row: r, col: c });
+                }
+                break;
+            }
+            r += dr;
+            c += dc;
+        }
+    });
+    
+    return moves;
+}
+
+// Movimientos de la reina
+function getQueenMoves(row, col, color) {
+    return [...getRookMoves(row, col, color), ...getBishopMoves(row, col, color)];
+}
+
+// Movimientos del rey
+function getKingMoves(row, col, color) {
+    const moves = [];
+    const directions = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], [0, 1],
+        [1, -1], [1, 0], [1, 1]
+    ];
+    
+    directions.forEach(([dr, dc]) => {
+        const r = row + dr;
+        const c = col + dc;
+        
+        if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            if (!board[r][c] || board[r][c].color !== color) {
+                moves.push({ row: r, col: c });
+            }
+        }
+    });
+    
+    return moves;
+}
+
+// Mover pieza
+function movePiece(fromRow, fromCol, toRow, toCol) {
+    const piece = board[fromRow][fromCol];
+    const captured = board[toRow][toCol];
+    
+    // Capturar pieza
+    if (captured) {
+        if (captured.color === 'white') {
+            capturedWhite.push(captured);
+        } else {
+            capturedBlack.push(captured);
+        }
+    }
+    
+    // Mover pieza
+    board[toRow][toCol] = piece;
+    board[fromRow][fromCol] = null;
+    
+    // Actualizar posición del rey
+    if (piece.type === 'king') {
+        if (piece.color === 'white') {
+            whiteKingPos = { row: toRow, col: toCol };
+        } else {
+            blackKingPos = { row: toRow, col: toCol };
+        }
+    }
+    
+    renderBoard();
+}
+
+// Verificar si el rey está en jaque
+function isKingInCheck(color) {
+    const kingPos = color === 'white' ? whiteKingPos : blackKingPos;
+    const enemyColor = color === 'white' ? 'black' : 'white';
+    
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece && piece.color === enemyColor) {
+                const moves = getValidMovesWithoutCheckTest(row, col);
+                if (moves.some(move => move.row === kingPos.row && move.col === kingPos.col)) {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
+// Obtener movimientos sin verificar jaque (para evitar recursión)
+function getValidMovesWithoutCheckTest(row, col) {
+    const piece = board[row][col];
+    if (!piece) return [];
+    
+    switch (piece.type) {
+        case 'pawn': return getPawnMoves(row, col, piece.color);
+        case 'rook': return getRookMoves(row, col, piece.color);
+        case 'knight': return getKnightMoves(row, col, piece.color);
+        case 'bishop': return getBishopMoves(row, col, piece.color);
+        case 'queen': return getQueenMoves(row, col, piece.color);
+        case 'king': return getKingMoves(row, col, piece.color);
+        default: return [];
+    }
+}
+
+// Verificar si el movimiento pondría al rey en jaque
+function wouldBeInCheck(fromRow, fromCol, toRow, toCol, color) {
+    // Simular movimiento
+    const piece = board[fromRow][fromCol];
+    const capturedPiece = board[toRow][toCol];
+    const oldKingPos = color === 'white' ? { ...whiteKingPos } : { ...blackKingPos };
+    
+    board[toRow][toCol] = piece;
+    board[fromRow][fromCol] = null;
+    
+    if (piece.type === 'king') {
+        if (color === 'white') {
+            whiteKingPos = { row: toRow, col: toCol };
+        } else {
+            blackKingPos = { row: toRow, col: toCol };
+        }
+    }
+    
+    const inCheck = isKingInCheck(color);
+    
+    // Deshacer movimiento
+    board[fromRow][fromCol] = piece;
+    board[toRow][toCol] = capturedPiece;
+    
+    if (piece.type === 'king') {
+        if (color === 'white') {
+            whiteKingPos = oldKingPos;
+        } else {
+            blackKingPos = oldKingPos;
+        }
+    }
+    
+    return inCheck;
+}
+
+// Verificar jaque mate
+function isCheckmate(color) {
+    if (!isKingInCheck(color)) return false;
+    
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece && piece.color === color) {
+                const moves = getValidMoves(row, col);
+                if (moves.length > 0) return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+// Cambiar jugador
+function switchPlayer() {
+    currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+    updateStatus();
+    
+    if (isCheckmate(currentPlayer)) {
+        endGame(currentPlayer === 'white' ? 'black' : 'white');
+    }
+}
+
+// Actualizar estado
+function updateStatus() {
+    currentPlayerEl.textContent = currentPlayer === 'white' ? 'Blancas' : 'Negras';
+    currentPlayerEl.className = currentPlayer === 'white' ? 'white-turn' : 'black-turn';
+    
+    if (isKingInCheck(currentPlayer)) {
+        statusMessage.textContent = '¡Jaque! El rey está en peligro';
+        statusMessage.style.color = '#e74c3c';
+        statusMessage.style.fontWeight = 'bold';
+    } else {
+        statusMessage.textContent = `Turno de las ${currentPlayer === 'white' ? 'blancas' : 'negras'}`;
+        statusMessage.style.color = '#333';
+        statusMessage.style.fontWeight = '500';
+    }
+}
+
+// Actualizar piezas capturadas
+function updateCapturedPieces() {
+    capturedBlackEl.innerHTML = capturedBlack.map(p => pieces.black[p.type]).join(' ');
+    capturedWhiteEl.innerHTML = capturedWhite.map(p => pieces.white[p.type]).join(' ');
 }
 
 // Terminar juego
-function endGame() {
-    gameRunning = false;
-    clearInterval(gameInterval);
-    clearInterval(spawnInterval);
-    
-    finalScoreElement.textContent = score;
-    gameOverScreen.classList.remove('hidden');
+function endGame(winner) {
+    winnerText.textContent = '¡Jaque Mate!';
+    winnerMessage.textContent = `¡Las ${winner === 'white' ? 'blancas' : 'negras'} ganan!`;
+    gameOverModal.classList.remove('hidden');
 }
 
-// Pausar juego
-function togglePause() {
-    if (!gameRunning) return;
-    isPaused = !isPaused;
-}
-
-// Controles del teclado
-document.addEventListener('keydown', (e) => {
-    if (!gameRunning || isPaused) return;
-    
-    const lanes = [20, 40, 60, 80];
-    const currentIndex = lanes.indexOf(playerPosition);
-    
-    if (e.key === 'ArrowLeft' && currentIndex > 0) {
-        playerPosition = lanes[currentIndex - 1];
-        playerCar.style.left = playerPosition + '%';
-    }
-    
-    if (e.key === 'ArrowRight' && currentIndex < lanes.length - 1) {
-        playerPosition = lanes[currentIndex + 1];
-        playerCar.style.left = playerPosition + '%';
-    }
-    
-    if (e.key === ' ') {
-        e.preventDefault();
-        togglePause();
-    }
+// Event listeners
+document.getElementById('restart-btn').addEventListener('click', initGame);
+document.getElementById('new-game-btn').addEventListener('click', () => {
+    gameOverModal.classList.add('hidden');
+    initGame();
 });
 
-// Eventos de botones
-startBtn.addEventListener('click', initGame);
-restartBtn.addEventListener('click', initGame);
+// Iniciar juego
+initGame();
