@@ -1,74 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajedrez</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ajedrez</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <h1>♔ Ajedrez ♔</h1>
-            <div class="game-info">
-                <div class="turn-indicator">
-                    <span id="turn-text">Turno:</span>
-                    <span id="current-player" class="white-turn">Blancas</span>
-                </div>
-                <button id="restart-btn">Nueva Partida</button>
-            </div>
-        </div>
-
-        <div class="board-wrapper">
-            <div class="coordinates left">
-                <div>8</div>
-                <div>7</div>
-                <div>6</div>
-                <div>5</div>
-                <div>4</div>
-                <div>3</div>
-                <div>2</div>
-                <div>1</div>
-            </div>
-
-            <div class="board-container">
-                <div id="chess-board"></div>
-                <div class="coordinates bottom">
-                    <div>a</div>
-                    <div>b</div>
-                    <div>c</div>
-                    <div>d</div>
-                    <div>e</div>
-                    <div>f</div>
-                    <div>g</div>
-                    <div>h</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="status-bar">
-            <div id="status-message">Selecciona una pieza blanca para comenzar</div>
-            <div id="captured-pieces">
-                <div class="captured-section">
-                    <span class="label">Capturadas Negras:</span>
-                    <span id="captured-black"></span>
-                </div>
-                <div class="captured-section">
-                    <span class="label">Capturadas Blancas:</span>
-                    <span id="captured-white"></span>
-                </div>
-            </div>
-        </div>
-
-        <div id="game-over-modal" class="modal hidden">
-            <div class="modal-content">
-                <h2 id="winner-text">¡Jaque Mate!</h2>
-                <p id="winner-message"></p>
-                <button id="new-game-btn">Nueva Partida</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+<div class="container">
+<h1>Ajedrez</h1>
+<div class="controls">
+<div id="turn">Turno: <span id="turnPlayer">Blancas</span></div>
+<button id="resetBtn">Reiniciar</button>
+</div>
+<div id="board" class="board" aria-label="Tablero de ajedrez"></div>
+<div class="legend">
+<p>Haz clic en una pieza para ver movimientos posibles. Clic en casilla vacía o con pieza rival para mover.</p>
+</div>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
