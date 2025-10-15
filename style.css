@@ -75,3 +75,10 @@ body {
 .zero {
   grid-column: span 2;
 }
+
+#history {
+  text-align: right;
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
