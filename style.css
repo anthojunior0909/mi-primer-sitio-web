@@ -1,66 +1,205 @@
-body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f0d9b5;
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-#game-container {
-    display: flex;
-    gap: 20px;
-}
-
-#chessboard {
-    display: grid;
-    grid-template-columns: repeat(8, 70px);
-    grid-template-rows: repeat(8, 70px);
-    border: 5px solid #3a3a3a;
-    width: 560px;
-    height: 560px;
-}
-
-.square {
-    width: 70px;
-    height: 70px;
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 50px;
-    cursor: pointer;
+    padding: 20px;
 }
 
-.white {
-    background-color: #f0d9b5;
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
 }
 
-.black {
-    background-color: #b58863;
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 2.5em;
 }
 
-.piece {
-    user-select: none; /* Evita la selección de texto de las piezas */
-}
-
-#game-info {
-    width: 200px;
-    padding: 10px;
-    border: 2px solid #3a3a3a;
-    background-color: #fff;
-    border-radius: 5px;
-}
-
-#captured-pieces {
-    margin-top: 20px;
-}
-
-#white-captured, #black-captured {
-    min-height: 50px;
-    margin-top: 10px;
+.game-info {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 10px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 5px;
-    font-size: 30px;
+}
+
+.label {
+    font-weight: bold;
+    color: #666;
+    font-size: 0.9em;
+}
+
+#mines-count, #timer {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+#reset-btn {
+    padding: 10px 20px;
+    font-size: 1em;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#reset-btn:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+}
+
+.difficulty {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.diff-btn {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    background: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.diff-btn:hover {
+    background: #d0d0d0;
+}
+
+.diff-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+#game-board {
+    display: inline-grid;
+    gap: 2px;
+    background: #ccc;
+    padding: 2px;
+    border-radius: 8px;
+    margin: 0 auto;
+}
+
+.cell {
+    width: 35px;
+    height: 35px;
+    background: #ddd;
+    border: 2px solid #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+}
+
+.cell:hover:not(.revealed):not(.flagged) {
+    background: #eee;
+    transform: scale(1.05);
+}
+
+.cell.revealed {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    cursor: default;
+}
+
+.cell.mine {
+    background: #ff4444;
+}
+
+.cell.flagged {
+    background: #ffd700;
+}
+
+.cell.number-1 { color: #0000ff; }
+.cell.number-2 { color: #008000; }
+.cell.number-3 { color: #ff0000; }
+.cell.number-4 { color: #000080; }
+.cell.number-5 { color: #800000; }
+.cell.number-6 { color: #008080; }
+.cell.number-7 { color: #000000; }
+.cell.number-8 { color: #808080; }
+
+#game-message {
+    margin-top: 20px;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    border-radius: 8px;
+    animation: slideIn 0.3s;
+}
+
+#game-message.win {
+    background: #4caf50;
+    color: white;
+}
+
+#game-message.lose {
+    background: #f44336;
+    color: white;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .cell {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9em;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    .difficulty {
+        flex-direction: column;
+    }
 }

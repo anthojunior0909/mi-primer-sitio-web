@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajedrez</title>
+    <title>Buscaminas</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <div id="chessboard"></div>
-        <div id="game-info">
-            <h2>Turno de: <span id="player-turn">Blancas</span></h2>
-            <div id="captured-pieces">
-                <h3>Piezas Capturadas:</h3>
-                <div id="white-captured"></div>
-                <div id="black-captured"></div>
+    <div class="container">
+        <h1>💣 Buscaminas</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <span class="label">Minas:</span>
+                <span id="mines-count">10</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Tiempo:</span>
+                <span id="timer">0</span>
+            </div>
+            <div class="info-item">
+                <button id="reset-btn">🔄 Nueva Partida</button>
             </div>
         </div>
+
+        <div class="difficulty">
+            <button class="diff-btn active" data-level="easy">Fácil (8x8)</button>
+            <button class="diff-btn" data-level="medium">Medio (12x12)</button>
+            <button class="diff-btn" data-level="hard">Difícil (16x16)</button>
+        </div>
+
+        <div id="game-board"></div>
+
+        <div id="game-message" class="hidden"></div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"></script>
+
     <script src="script.js"></script>
 </body>
 </html>
